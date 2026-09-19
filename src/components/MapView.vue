@@ -11,6 +11,7 @@ import {
   type ProvinceFeature,
 } from '../data'
 import { useRecordsStore } from '../stores/records'
+import { useThemeStore } from '../stores/theme'
 import { useStats } from '../composables/stats'
 import { pinia } from '../pinia'
 import AttractionCard from './AttractionCard.vue'
@@ -20,6 +21,7 @@ import SearchBox from './SearchBox.vue'
 
 const records = useRecordsStore()
 const { litCityIds, litProvinces, litAttractions } = useStats()
+const themeStore = useThemeStore()
 
 const mapEl = ref<HTMLElement | null>(null)
 const drawerCityId = ref<string | null>(null)
@@ -37,7 +39,7 @@ const markers = new Map<string, L.CircleMarker>()
 const overlayMarkers = new Map<string, L.Marker>()
 const cityLabels = new Map<string, L.Marker>()
 
-const provinceOfAdcode = new Map(cities.map((c) => [c.adcode, c.province]))
+const provinceNameOfAdcode = new Map(provinces.map((p) => [p.adcode, p.name]))
 
 function focusAttraction(aId: string) {
   const a = attractionById.get(aId)
@@ -46,16 +48,20 @@ function focusAttraction(aId: string) {
   openAttractionPopup(aId)
 }
 
-const STYLE = {
-  provinceBase: { color: 'rgba(105,128,170,0.35)', weight: 0.6, fillColor: '#101a2e', fillOpacity: 0.85 },
-  provinceLit: { color: 'rgba(246,196,83,0.6)', weight: 1.4, fillColor: '#101a2e', fillOpacity: 0.85 },
-  cityBase: { color: 'rgba(125,146,185,0.5)', weight: 0.9, fillColor: '#16233c', fillOpacity: 0.9 },
-  cityHover: { color: 'rgba(180,200,235,0.8)', weight: 1.4, fillColor: '#22345a', fillOpacity: 0.9 },
-  cityLit: { color: '#f6c453', weight: 1.8, fillColor: '#f6c453', fillOpacity: 0.22 },
-  dotNone: { radius: 3, weight: 1, color: '#93a8cc', fillColor: '#6d84ab', fillOpacity: 0.95 },
-  dotWish: { radius: 4, weight: 1.2, color: '#ffd7a8', fillColor: '#f0a35e', fillOpacity: 1 },
-  dotLit: { radius: 4.5, weight: 1.5, color: '#fff3cf', fillColor: '#f6c453', fillOpacity: 1 },
-} as const
+/** 地图配色随主题变化；radius/weight 等形状参数与主题无关 */
+const S = computed(() => {
+  const p = themeStore.palette
+  return {
+    provinceBase: { color: p.provinceStroke, weight: 0.6, fillColor: p.provinceFill, fillOpacity: 0.85 },
+    provinceLit: { color: p.provinceStrokeLit, weight: 1.4, fillColor: p.provinceFill, fillOpacity: 0.85 },
+    cityBase: { color: p.cityStroke, weight: 0.9, fillColor: p.cityFill, fillOpacity: 0.9 },
+    cityHover: { color: p.cityHoverStroke, weight: 1.4, fillColor: p.cityHoverFill, fillOpacity: 0.9 },
+    cityLit: { color: p.cityLitStroke, weight: 1.8, fillColor: p.cityLitFill, fillOpacity: 1 },
+    dotNone: { radius: 3, weight: 1, color: p.dotNoneStroke, fillColor: p.dotNoneFill, fillOpacity: 0.95 },
+    dotWish: { radius: 4, weight: 1.2, color: p.wishStroke, fillColor: p.wish, fillOpacity: 1 },
+    dotLit: { radius: 4.5, weight: 1.5, color: p.litStroke, fillColor: p.litFill, fillOpacity: 1 },
+  }
+})
 
 const cityProgress = computed(() => {
   const out = new Map<string, { lit: number; total: number }>()
@@ -82,17 +88,17 @@ function applyDotStyle(aId: string) {
   const marker = markers.get(aId)
   if (!marker) return
   const status = records.statusOf(aId)
-  if (status === 'lit') marker.setStyle({ ...STYLE.dotLit })
-  else if (status === 'wish') marker.setStyle({ ...STYLE.dotWish })
-  else marker.setStyle({ ...STYLE.dotNone })
+  if (status === 'lit') marker.setStyle({ ...S.value.dotLit })
+  else if (status === 'wish') marker.setStyle({ ...S.value.dotWish })
+  else marker.setStyle({ ...S.value.dotNone })
 }
 
 function syncOverlays() {
   for (const [cityId, progress] of cityProgress.value) {
-    // 城市边界点亮
+    // 城市边界点亮（无条件重涂，保证主题切换后颜色同步）
     const path = cityPaths.get(cityId)
-    if (path && !(path as unknown as { isLit?: boolean }).isLit) {
-      path.setStyle({ ...STYLE.cityLit })
+    if (path) {
+      path.setStyle({ ...S.value.cityLit })
       ;(path as unknown as { isLit?: boolean }).isLit = true
       path.getElement()?.classList.add('city-lit')
     }
@@ -123,7 +129,7 @@ function syncOverlays() {
     const lit = cityProgress.value.has(cityId)
     if (el) el.classList.toggle('city-lit', lit)
     if (!lit) {
-      path.setStyle({ ...STYLE.cityBase })
+      path.setStyle({ ...S.value.cityBase })
       ;(path as unknown as { isLit?: boolean }).isLit = false
     }
   }
@@ -134,11 +140,11 @@ function syncOverlays() {
     }
   }
 
-  // 省描边点亮
+  // 省描边点亮（省界特征名为全称如"浙江省"，与城市数据的简称做前缀匹配）
   for (const [adcode, path] of provincePaths) {
-    const province = provinceOfAdcode.get(adcode)
-    const lit = province ? litProvinces.value.has(province) : false
-    path.setStyle(lit ? { ...STYLE.provinceLit } : { ...STYLE.provinceBase })
+    const fullName = provinceNameOfAdcode.get(adcode)
+    const lit = fullName ? [...litProvinces.value].some((p) => fullName.startsWith(p)) : false
+    path.setStyle(lit ? { ...S.value.provinceLit } : { ...S.value.provinceBase })
     const el = path.getElement()
     if (el) el.classList.toggle('province-lit', lit)
   }
@@ -230,7 +236,7 @@ onMounted(() => {
   canvasRenderer = L.canvas({ padding: 0.5 })
 
   L.geoJSON(provinceFeatureCollection(), {
-    style: () => ({ ...STYLE.provinceBase }),
+    style: () => ({ ...S.value.provinceBase }),
     onEachFeature: (feature, layer) => {
       provincePaths.set(feature.properties.adcode, layer as L.Path)
     },
@@ -245,15 +251,15 @@ onMounted(() => {
       geometry: cityBoundaries[city.adcode],
     }
     const layer = L.geoJSON(feature, {
-      style: () => ({ ...STYLE.cityBase }),
+      style: () => ({ ...S.value.cityBase }),
       onEachFeature: (_f, l) => {
         const path = l as L.Polygon
         path.on('click', () => openCity(city.id))
         path.on('mouseover', () => {
-          if (!(path as unknown as { isLit?: boolean }).isLit) path.setStyle({ ...STYLE.cityHover })
+          if (!(path as unknown as { isLit?: boolean }).isLit) path.setStyle({ ...S.value.cityHover })
         })
         path.on('mouseout', () => {
-          if (!(path as unknown as { isLit?: boolean }).isLit) path.setStyle({ ...STYLE.cityBase })
+          if (!(path as unknown as { isLit?: boolean }).isLit) path.setStyle({ ...S.value.cityBase })
         })
       },
     }).addTo(map)
@@ -264,7 +270,7 @@ onMounted(() => {
   for (const [, list] of attractionsByCity) {
     for (const a of list) {
       const marker = L.circleMarker([a.lat, a.lng], {
-        ...STYLE.dotNone,
+        ...S.value.dotNone,
         renderer: canvasRenderer,
       }).addTo(map)
       marker.on('click', () => openAttractionPopup(a.id))
@@ -295,6 +301,12 @@ onBeforeUnmount(() => {
 
 watch(
   () => records.records,
+  () => syncOverlays(),
+)
+
+// 主题切换：地图层按新配色重涂（发光滤镜等 CSS 部分由变量自动生效）
+watch(
+  () => themeStore.theme,
   () => syncOverlays(),
 )
 </script>
@@ -343,14 +355,13 @@ watch(
   border-radius: 50%;
 }
 .dot-none {
-  background: #546a8f;
-  border: 1px solid #7d92b5;
+  background: var(--c-dot-none);
 }
 .dot-wish {
-  background: #f0a35e;
+  background: var(--c-dot-wish);
 }
 .dot-lit {
-  background: #f6c453;
-  box-shadow: 0 0 6px rgba(246, 196, 83, 0.9);
+  background: var(--c-dot-lit);
+  box-shadow: 0 0 6px var(--c-glow-shadow);
 }
 </style>

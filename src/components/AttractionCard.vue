@@ -141,7 +141,7 @@ async function removeVisit(recordId: string) {
       </label>
       <div class="flex gap-2">
         <button
-          class="flex-1 py-1.5 rounded-lg bg-glow-500 text-night-900 text-xs font-bold hover:bg-glow-400 transition"
+          class="flex-1 py-1.5 rounded-lg bg-glow-500 text-[var(--c-on-accent)] text-xs font-bold hover:bg-glow-400 transition"
           @click="submitCheckIn"
         >
           ✨ 确认点亮
@@ -170,7 +170,7 @@ async function removeVisit(recordId: string) {
         {{ status === 'wish' ? '取消心愿' : '⭐ 我想去' }}
       </button>
       <button
-        class="flex-1 py-1.5 rounded-lg bg-glow-500/90 text-night-900 text-xs font-bold hover:bg-glow-400 transition"
+        class="flex-1 py-1.5 rounded-lg bg-glow-500/90 text-[var(--c-on-accent)] text-xs font-bold hover:bg-glow-400 transition"
         @click="showForm = true"
       >
         {{ status === 'lit' ? '再打卡一次' : '🌟 打卡点亮' }}

@@ -253,7 +253,7 @@ function cityOf(id: string) {
                 />
                 <div class="flex gap-2">
                   <button
-                    class="px-3 py-1 rounded-lg bg-glow-500 text-night-900 text-xs font-bold"
+                    class="px-3 py-1 rounded-lg bg-glow-500 text-[var(--c-on-accent)] text-xs font-bold"
                     @click="saveEdit(v)"
                   >
                     保存

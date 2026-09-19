@@ -1,4 +1,5 @@
 import { provinces, cityBoundaries, cityById, attractionById } from '../data'
+import type { ThemePalette } from '../themes'
 
 export interface PosterInput {
   litCityIds: Set<string>
@@ -44,10 +45,7 @@ function drawGeometry(
   }
 }
 
-const GOLD = '#f6c453'
-const GOLD_LIGHT = '#ffe9a3'
-
-export function renderPoster(input: PosterInput): HTMLCanvasElement {
+export function renderPoster(input: PosterInput, palette: ThemePalette): HTMLCanvasElement {
   const W = 900
   const H = 1350
   const canvas = document.createElement('canvas')
@@ -57,9 +55,9 @@ export function renderPoster(input: PosterInput): HTMLCanvasElement {
 
   // 背景
   const bg = ctx.createLinearGradient(0, 0, 0, H)
-  bg.addColorStop(0, '#070d18')
-  bg.addColorStop(0.55, '#0a1322')
-  bg.addColorStop(1, '#0d1626')
+  bg.addColorStop(0, palette.posterBgTop)
+  bg.addColorStop(0.55, palette.posterBgBottom)
+  bg.addColorStop(1, palette.posterBgBottom)
   ctx.fillStyle = bg
   ctx.fillRect(0, 0, W, H)
 
@@ -70,7 +68,7 @@ export function renderPoster(input: PosterInput): HTMLCanvasElement {
     const sy = Math.random() * H
     const r = Math.random() * 1.3
     ctx.globalAlpha = 0.15 + Math.random() * 0.5
-    ctx.fillStyle = '#cdd9ef'
+    ctx.fillStyle = palette.posterStar
     ctx.beginPath()
     ctx.arc(sx, sy, r, 0, Math.PI * 2)
     ctx.fill()
@@ -79,13 +77,13 @@ export function renderPoster(input: PosterInput): HTMLCanvasElement {
 
   // 标题
   ctx.textAlign = 'center'
-  ctx.fillStyle = GOLD_LIGHT
+  ctx.fillStyle = palette.litStroke
   ctx.font = 'bold 44px "PingFang SC", "Microsoft YaHei", sans-serif'
-  ctx.shadowColor = 'rgba(246,196,83,0.5)'
+  ctx.shadowColor = palette.cityLitShadow
   ctx.shadowBlur = 24
   ctx.fillText('我的旅游心愿地图', W / 2, 108)
   ctx.shadowBlur = 0
-  ctx.fillStyle = 'rgba(160,178,205,0.9)'
+  ctx.fillStyle = palette.posterTextDim
   ctx.font = '16px "PingFang SC", sans-serif'
   ctx.fillText(
     new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }),
@@ -114,16 +112,16 @@ export function renderPoster(input: PosterInput): HTMLCanvasElement {
   // 省底图
   for (const p of provinces) {
     drawGeometry(ctx, p.geometry, project)
-    ctx.fillStyle = '#101a2e'
+    ctx.fillStyle = palette.provinceFill
     ctx.fill()
-    ctx.strokeStyle = litProvinceOf(p.adcode, input) ? 'rgba(246,196,83,0.55)' : 'rgba(105,128,170,0.35)'
+    ctx.strokeStyle = litProvinceOf(p.adcode, input) ? palette.provinceStrokeLit : palette.provinceStroke
     ctx.lineWidth = litProvinceOf(p.adcode, input) ? 1.3 : 0.7
     ctx.stroke()
   }
 
   // 点亮城市
   ctx.save()
-  ctx.shadowColor = 'rgba(246,196,83,0.85)'
+  ctx.shadowColor = palette.cityLitShadow
   ctx.shadowBlur = 18
   for (const cityId of input.litCityIds) {
     const city = cityById.get(cityId)
@@ -131,9 +129,9 @@ export function renderPoster(input: PosterInput): HTMLCanvasElement {
     const geom = cityBoundaries[city.adcode]
     if (!geom) continue
     drawGeometry(ctx, geom, project)
-    ctx.fillStyle = 'rgba(246,196,83,0.4)'
+    ctx.fillStyle = palette.cityLitFill
     ctx.fill()
-    ctx.strokeStyle = GOLD
+    ctx.strokeStyle = palette.cityLitStroke
     ctx.lineWidth = 1.4
     ctx.stroke()
   }
@@ -141,9 +139,9 @@ export function renderPoster(input: PosterInput): HTMLCanvasElement {
 
   // 点亮景点
   ctx.save()
-  ctx.shadowColor = 'rgba(255,215,122,1)'
+  ctx.shadowColor = palette.cityLitShadow
   ctx.shadowBlur = 8
-  ctx.fillStyle = GOLD_LIGHT
+  ctx.fillStyle = palette.litFill
   for (const aId of input.litAttractionIds) {
     const a = attractionById.get(aId)
     if (!a) continue
@@ -164,26 +162,26 @@ export function renderPoster(input: PosterInput): HTMLCanvasElement {
   const cardW = W - 120
   const cardH = 200
   const card = ctx.createLinearGradient(0, cardY, 0, cardY + cardH)
-  card.addColorStop(0, 'rgba(246,196,83,0.09)')
-  card.addColorStop(1, 'rgba(246,196,83,0.03)')
+  card.addColorStop(0, palette.posterStatFrom)
+  card.addColorStop(1, palette.posterStatTo)
   ctx.fillStyle = card
   roundRect(ctx, 60, cardY, cardW, cardH, 20)
   ctx.fill()
-  ctx.strokeStyle = 'rgba(246,196,83,0.3)'
+  ctx.strokeStyle = palette.posterStatBorder
   ctx.lineWidth = 1
   ctx.stroke()
 
   const colW = cardW / stats.length
   stats.forEach((s, i) => {
     const cx = 60 + colW * i + colW / 2
-    ctx.fillStyle = GOLD_LIGHT
+    ctx.fillStyle = palette.litStroke
     ctx.font = 'bold 58px "PingFang SC", sans-serif'
     ctx.fillText(String(s.value), cx, cardY + 92)
-    ctx.fillStyle = 'rgba(190,203,224,0.95)'
+    ctx.fillStyle = palette.posterTextDim
     ctx.font = '15px "PingFang SC", sans-serif'
     ctx.fillText(s.label, cx, cardY + 128)
     if (i > 0) {
-      ctx.strokeStyle = 'rgba(246,196,83,0.18)'
+      ctx.strokeStyle = palette.posterDivider
       ctx.beginPath()
       ctx.moveTo(60 + colW * i, cardY + 40)
       ctx.lineTo(60 + colW * i, cardY + cardH - 40)
@@ -192,7 +190,7 @@ export function renderPoster(input: PosterInput): HTMLCanvasElement {
   })
 
   // 落款
-  ctx.fillStyle = 'rgba(140,158,188,0.8)'
+  ctx.fillStyle = palette.posterTextDim
   ctx.font = '14px "PingFang SC", sans-serif'
   ctx.fillText('每一盏灯，都是一段旅程 · 旅游心愿地图', W / 2, 1290)
 

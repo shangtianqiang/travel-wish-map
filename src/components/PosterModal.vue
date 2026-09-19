@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { renderPoster } from '../utils/poster'
+import { useThemeStore } from '../stores/theme'
 
 const props = defineProps<{
   open: boolean
@@ -10,17 +11,21 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ close: [] }>()
 
+const themeStore = useThemeStore()
 const dataUrl = ref('')
 
 watch(
   () => props.open,
   (open) => {
     if (!open) return
-    const canvas = renderPoster({
-      litCityIds: props.litCityIds,
-      litProvinces: props.litProvinces,
-      litAttractionIds: props.litAttractionIds,
-    })
+    const canvas = renderPoster(
+      {
+        litCityIds: props.litCityIds,
+        litProvinces: props.litProvinces,
+        litAttractionIds: props.litAttractionIds,
+      },
+      themeStore.palette,
+    )
     dataUrl.value = canvas.toDataURL('image/png')
   },
 )
@@ -49,7 +54,7 @@ function download() {
         />
         <div class="flex gap-2">
           <button
-            class="px-5 py-2 rounded-xl bg-glow-500 text-night-900 text-sm font-bold hover:bg-glow-400 transition"
+            class="px-5 py-2 rounded-xl bg-glow-500 text-[var(--c-on-accent)] text-sm font-bold hover:bg-glow-400 transition"
             @click="download"
           >
             ⬇️ 保存海报

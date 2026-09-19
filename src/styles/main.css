@@ -1,22 +1,124 @@
 @import "tailwindcss";
 
-@theme {
-  --color-night-900: #070d18;
-  --color-night-800: #0b1220;
-  --color-night-700: #101a2e;
-  --color-night-600: #16233c;
-  --color-glow-300: #ffe9a3;
-  --color-glow-400: #ffd77a;
-  --color-glow-500: #f6c453;
-  --color-wish-400: #f0a35e;
+/* ============ 主题变量：夜光金（默认） ============ */
+:root,
+[data-theme='night'] {
+  --c-bg: #070d18;
+  --c-surface: #0b1220;
+  --c-surface-2: #101a2e;
+  --c-line-tint: #ffffff;
+  --c-text-1: #dbe4f3;
+  --c-text-2: #94a3b8;
+  --c-text-dim: #64748b;
+  --c-accent: #f6c453;
+  --c-accent-soft: #ffe9a3;
+  --c-on-accent: #0b1220;
+  --c-accent-soft-bg: rgba(246, 196, 83, 0.12);
+  --c-wish: #f0a35e;
+  --c-card-border: rgba(246, 196, 83, 0.25);
+  --c-card-glow: rgba(246, 196, 83, 0.08);
+  --c-card-solid: #101a2e;
+  --c-label-bg: rgba(11, 18, 32, 0.85);
+  --c-glow-core: #ffe9a3;
+  --c-glow-halo: rgba(255, 215, 122, 0.6);
+  --c-glow-shadow: rgba(255, 215, 122, 0.95);
+  --c-wish-shadow: rgba(240, 163, 94, 0.8);
+  --c-city-glow: rgba(246, 196, 83, 0.6);
+  --c-prov-glow: rgba(246, 196, 83, 0.35);
+  --c-dot-none: #6d84ab;
+  --c-dot-wish: #f0a35e;
+  --c-dot-lit: #f6c453;
+}
+
+/* ============ 水墨江南（亮色宣纸） ============ */
+[data-theme='ink'] {
+  --c-bg: #f4eddc;
+  --c-surface: #faf5e9;
+  --c-surface-2: #efe7d2;
+  --c-line-tint: #3a362e;
+  --c-text-1: #3a362e;
+  --c-text-2: #6b6355;
+  --c-text-dim: #8f8672;
+  --c-accent: #c04f38;
+  --c-accent-soft: #a83a24;
+  --c-on-accent: #fff8ee;
+  --c-accent-soft-bg: rgba(192, 79, 56, 0.1);
+  --c-wish: #c07a2a;
+  --c-card-border: rgba(192, 79, 56, 0.3);
+  --c-card-glow: rgba(192, 79, 56, 0.1);
+  --c-card-solid: #faf5e9;
+  --c-label-bg: rgba(250, 245, 233, 0.92);
+  --c-glow-core: #c04f38;
+  --c-glow-halo: rgba(192, 79, 56, 0.45);
+  --c-glow-shadow: rgba(192, 79, 56, 0.7);
+  --c-wish-shadow: rgba(192, 122, 42, 0.6);
+  --c-city-glow: rgba(192, 79, 56, 0.45);
+  --c-prov-glow: rgba(192, 79, 56, 0.3);
+  --c-dot-none: #b3a88f;
+  --c-dot-wish: #c07a2a;
+  --c-dot-lit: #c04f38;
+}
+
+/* ============ 极光翠（深青绿） ============ */
+[data-theme='aurora'] {
+  --c-bg: #04100e;
+  --c-surface: #081a17;
+  --c-surface-2: #0c231f;
+  --c-line-tint: #d7ece6;
+  --c-text-1: #d7ece6;
+  --c-text-2: #8fb5ac;
+  --c-text-dim: #5f857c;
+  --c-accent: #3ddbb5;
+  --c-accent-soft: #a8f0dc;
+  --c-on-accent: #04211b;
+  --c-accent-soft-bg: rgba(61, 219, 181, 0.12);
+  --c-wish: #e5c04f;
+  --c-card-border: rgba(61, 219, 181, 0.28);
+  --c-card-glow: rgba(61, 219, 181, 0.1);
+  --c-card-solid: #0c231f;
+  --c-label-bg: rgba(8, 26, 23, 0.88);
+  --c-glow-core: #a8f0dc;
+  --c-glow-halo: rgba(61, 219, 181, 0.55);
+  --c-glow-shadow: rgba(61, 219, 181, 0.9);
+  --c-wish-shadow: rgba(229, 192, 79, 0.7);
+  --c-city-glow: rgba(61, 219, 181, 0.55);
+  --c-prov-glow: rgba(61, 219, 181, 0.32);
+  --c-dot-none: #3d6a60;
+  --c-dot-wish: #e5c04f;
+  --c-dot-lit: #3ddbb5;
+}
+
+/*
+ * 把组件里使用的 Tailwind 颜色映射到主题变量：
+ * 组件无需改动类名，即可整体换肤。
+ */
+@theme inline {
+  --color-night-900: var(--c-bg);
+  --color-night-800: var(--c-surface);
+  --color-night-700: var(--c-surface-2);
+  --color-night-600: var(--c-surface-2);
+  --color-glow-300: var(--c-accent-soft);
+  --color-glow-400: var(--c-accent);
+  --color-glow-500: var(--c-accent);
+  --color-wish-400: var(--c-wish);
+  --color-slate-100: var(--c-text-1);
+  --color-slate-200: var(--c-text-1);
+  --color-slate-300: var(--c-text-1);
+  --color-slate-400: var(--c-text-2);
+  --color-slate-500: var(--c-text-dim);
+  --color-slate-600: var(--c-text-dim);
+  /* bg-white/5、border-white/10 等透明度组合随主题取"前景 tint"色 */
+  --color-white: var(--c-line-tint);
+  /* accent 按钮/标签上的文字色（text-night-900） */
+  --color-night-950: var(--c-on-accent);
   --font-sans: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
 }
 
 html, body, #app {
   height: 100%;
   margin: 0;
-  background-color: var(--color-night-900);
-  color: #dbe4f3;
+  background-color: var(--c-bg);
+  color: var(--c-text-1);
   font-family: var(--font-sans);
   overscroll-behavior: none;
 }
@@ -26,6 +128,34 @@ html, body, #app {
   0% { transform: scale(0.6); opacity: 0.85; }
   70% { transform: scale(2.2); opacity: 0; }
   100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* Leaflet 容器与主题适配 */
+.leaflet-container {
+  background: var(--c-bg);
+  outline: none;
+  font-family: var(--font-sans);
+}
+.leaflet-container ::selection { background: var(--c-accent-soft-bg); }
+
+/* 自定义弹窗外壳 */
+.attraction-card {
+  background: var(--c-card-solid);
+  border: 1px solid var(--c-card-border);
+  border-radius: 14px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.35), 0 0 24px var(--c-card-glow);
+  color: var(--c-text-1);
+}
+.attraction-card .leaflet-popup-tip {
+  background: var(--c-card-solid);
+  border: 1px solid var(--c-card-border);
+}
+.leaflet-popup-content-wrapper { background: transparent; box-shadow: none; padding: 0; }
+.leaflet-popup-content { margin: 0; width: 264px !important; line-height: 1.5; }
+.leaflet-popup-close-button {
+  color: var(--c-text-2) !important;
+  top: 6px !important; right: 8px !important;
+  font-size: 20px !important;
 }
 
 /* 景点点亮标记（divIcon） */
@@ -42,15 +172,15 @@ html, body, #app {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 215, 122, 0.6) 0%, rgba(255, 215, 122, 0) 70%);
+  background: radial-gradient(circle, var(--c-glow-halo) 0%, rgba(0, 0, 0, 0) 70%);
   animation: pulse-glow 2.4s ease-out infinite;
 }
 .glow-dot i {
   position: absolute;
   inset: 5px;
   border-radius: 50%;
-  background: #ffe9a3;
-  box-shadow: 0 0 6px 2px rgba(255, 215, 122, 0.95);
+  background: var(--c-glow-core);
+  box-shadow: 0 0 6px 2px var(--c-glow-shadow);
 }
 
 .wish-flag {
@@ -58,8 +188,8 @@ html, body, #app {
   font-size: 14px;
   line-height: 16px;
   text-align: center;
-  color: #f0a35e;
-  text-shadow: 0 0 6px rgba(240, 163, 94, 0.8);
+  color: var(--c-wish);
+  text-shadow: 0 0 6px var(--c-wish-shadow);
   transform-origin: 50% 100%;
   animation: flag-wave 2.6s ease-in-out infinite;
 }
@@ -76,41 +206,13 @@ html, body, #app {
   border-radius: 999px;
   font-size: 11px;
   line-height: 1.4;
-  color: #ffe9a3;
-  background: rgba(11, 18, 32, 0.85);
-  border: 1px solid rgba(246, 196, 83, 0.45);
-  box-shadow: 0 0 10px rgba(246, 196, 83, 0.25);
+  color: var(--c-accent-soft);
+  background: var(--c-label-bg);
+  border: 1px solid var(--c-card-border);
+  box-shadow: 0 0 10px var(--c-card-glow);
 }
-.city-label b { color: #f6c453; }
+.city-label b { color: var(--c-accent); }
 
 /* 点亮区域发光（SVG path） */
-.city-lit { filter: drop-shadow(0 0 8px rgba(246, 196, 83, 0.6)); }
-.province-lit { filter: drop-shadow(0 0 5px rgba(246, 196, 83, 0.35)); }
-
-/* Leaflet 容器与深色主题适配 */
-.leaflet-container {
-  background: var(--color-night-900);
-  outline: none;
-  font-family: var(--font-sans);
-}
-.leaflet-container ::selection { background: rgba(246, 196, 83, 0.3); }
-
-/* 自定义弹窗外壳 */
-.attraction-card {
-  background: linear-gradient(160deg, rgba(16, 26, 46, 0.97), rgba(11, 18, 32, 0.97));
-  border: 1px solid rgba(246, 196, 83, 0.25);
-  border-radius: 14px;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.55), 0 0 24px rgba(246, 196, 83, 0.08);
-  color: #dbe4f3;
-}
-.attraction-card .leaflet-popup-tip {
-  background: rgba(16, 26, 46, 0.97);
-  border: 1px solid rgba(246, 196, 83, 0.25);
-}
-.leaflet-popup-content-wrapper { background: transparent; box-shadow: none; padding: 0; }
-.leaflet-popup-content { margin: 0; width: 264px !important; line-height: 1.5; }
-.leaflet-popup-close-button {
-  color: #8fa1bd !important;
-  top: 6px !important; right: 8px !important;
-  font-size: 20px !important;
-}
+.city-lit { filter: drop-shadow(0 0 8px var(--c-city-glow)); }
+.province-lit { filter: drop-shadow(0 0 5px var(--c-prov-glow)); }

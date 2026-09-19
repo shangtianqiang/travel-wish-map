@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import MapView from './components/MapView.vue'
 import FootprintsView from './components/FootprintsView.vue'
+import ThemeSwitcher from './components/ThemeSwitcher.vue'
 import { useStats } from './composables/stats'
 import { useRecordsStore } from './stores/records'
 
@@ -41,6 +42,8 @@ const stats = computed(() => [
           <span class="hidden sm:inline text-[10px] sm:text-xs text-slate-400">{{ s.label }}</span>
         </div>
       </div>
+
+      <ThemeSwitcher />
 
       <button
         class="shrink-0 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition
