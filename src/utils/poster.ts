@@ -1,4 +1,5 @@
 import { provinces, cityBoundaries, cityById, attractionById } from '../data'
+import { centroidOfGeometry, shortProvinceName } from './geo'
 import type { ThemePalette } from '../themes'
 
 export interface PosterInput {
@@ -118,6 +119,18 @@ export function renderPoster(input: PosterInput, palette: ThemePalette): HTMLCan
     ctx.lineWidth = litProvinceOf(p.adcode, input) ? 1.3 : 0.7
     ctx.stroke()
   }
+
+  // 省名标注
+  ctx.save()
+  ctx.fillStyle = palette.posterTextDim
+  ctx.globalAlpha = 0.75
+  ctx.font = '11px "PingFang SC", sans-serif'
+  for (const p of provinces) {
+    const [lng, lat] = centroidOfGeometry(p.geometry)
+    const [px, py] = project(lng, lat)
+    ctx.fillText(shortProvinceName(p.name), px, py + 4)
+  }
+  ctx.restore()
 
   // 点亮城市
   ctx.save()

@@ -210,6 +210,29 @@ html, body, #app {
 }
 .city-label b { color: var(--c-accent); }
 
+/* 省名标注（常驻） */
+.province-label {
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: var(--c-text-dim);
+  opacity: 0.85;
+  pointer-events: none;
+  text-shadow: 0 0 4px var(--c-bg), 0 0 4px var(--c-bg);
+}
+
+/* 城市名标注（放大后显示的未点亮城市） */
+.city-name-label {
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--c-text-2);
+  opacity: 0.95;
+  pointer-events: none;
+  text-shadow: 0 0 4px var(--c-bg), 0 0 4px var(--c-bg);
+}
+
 /* 点亮区域发光（SVG path） */
 .city-lit { filter: drop-shadow(0 0 8px var(--c-city-glow)); }
 .province-lit { filter: drop-shadow(0 0 5px var(--c-prov-glow)); }

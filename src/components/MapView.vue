@@ -14,6 +14,7 @@ import { useRecordsStore } from '../stores/records'
 import { useThemeStore } from '../stores/theme'
 import { useStats } from '../composables/stats'
 import { pinia } from '../pinia'
+import { centroidOfGeometry, shortProvinceName, PROVINCE_LABEL_OVERRIDE } from '../utils/geo'
 import AttractionCard from './AttractionCard.vue'
 import CityDrawer from './CityDrawer.vue'
 import PosterModal from './PosterModal.vue'
@@ -40,6 +41,10 @@ const cityPaths = new Map<string, L.Polygon>()
 const markers = new Map<string, L.CircleMarker>()
 const overlayMarkers = new Map<string, L.Marker>()
 const cityLabels = new Map<string, L.Marker>()
+const cityNameLabels = new Map<string, L.Marker>()
+
+/** 城市名标注在此缩放级别以上显示 */
+const CITY_NAME_ZOOM = 5.5
 
 const provinceNameOfAdcode = new Map(provinces.map((p) => [p.adcode, p.name]))
 
@@ -51,6 +56,15 @@ function focusAttraction(aId: string) {
   if (!a || !map) return
   map.flyTo([a.lat, a.lng], Math.max(map.getZoom(), 8), { duration: 0.8 })
   openAttractionPopup(aId)
+}
+
+/** 城市名标注显隐：放大后显示，点亮的城市由进度角标代替 */
+function syncCityNameVisibility() {
+  const visible = (map?.getZoom() ?? 0) >= CITY_NAME_ZOOM
+  for (const [cityId, marker] of cityNameLabels) {
+    const el = marker.getElement()
+    if (el) el.style.display = visible && !cityProgress.value.has(cityId) ? '' : 'none'
+  }
 }
 
 /** 地图配色随主题变化；radius/weight 等形状参数与主题无关 */
@@ -155,6 +169,7 @@ function syncOverlays() {
   }
 
   // 景点点样式 + 光晕/旗帜覆盖层
+  // 景点点样式 + 光晕/旗帜覆盖层
   for (const aId of markers.keys()) applyDotStyle(aId)
   const wishIds = records.wishAttractionIds
   for (const [aId, marker] of overlayMarkers) {
@@ -188,6 +203,9 @@ function syncOverlays() {
     }).addTo(map!)
     overlayMarkers.set(aId, m)
   }
+
+  // 点亮状态变化会影响城市名标注的显隐（点亮城市由进度角标代替）
+  syncCityNameVisibility()
 }
 
 function openAttractionPopup(aId: string) {
@@ -282,6 +300,40 @@ onMounted(() => {
       markers.set(a.id, marker)
     }
   }
+
+  // 省名标注（常驻，取省界质心，个别省份手工修正）
+  for (const p of provinces) {
+    const [lng, lat] = PROVINCE_LABEL_OVERRIDE[p.adcode] ?? centroidOfGeometry(p.geometry)
+    L.marker([lat, lng], {
+      icon: L.divIcon({
+        className: '',
+        html: `<div class="province-label">${shortProvinceName(p.name)}</div>`,
+        iconSize: [0, 0],
+      }),
+      interactive: false,
+      zIndexOffset: -200,
+    }).addTo(map)
+  }
+
+  // 城市名标注（放大后显示；直辖市与省名重叠，跳过）
+  for (const city of cities) {
+    if (!attractionsByCity.has(city.id)) continue
+    if (city.adcode % 10000 === 0) continue
+    const geom = cityBoundaries[city.adcode]
+    const [lng, lat] = geom ? centroidOfGeometry(geom) : city.center
+    const marker = L.marker([lat, lng], {
+      icon: L.divIcon({
+        className: '',
+        html: `<div class="city-name-label">${city.name}</div>`,
+        iconSize: [0, 0],
+      }),
+      interactive: false,
+      zIndexOffset: -100,
+    }).addTo(map)
+    cityNameLabels.set(city.id, marker)
+  }
+  syncCityNameVisibility()
+  map.on('zoomend', syncCityNameVisibility)
 
   resizeObserver = new ResizeObserver(() => map?.invalidateSize())
   resizeObserver.observe(mapEl.value)
