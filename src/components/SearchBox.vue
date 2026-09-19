@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { attractions, cities } from '../data'
+import AppIcon from './AppIcon.vue'
 
 const emit = defineEmits<{
   pickAttraction: [attractionId: string]
@@ -65,7 +66,13 @@ function pick(hit: Hit) {
           @mousedown.prevent="pick(hit)"
         >
           <span class="block text-[13px] text-slate-200">
-            <span v-if="hit.type === 'city'" class="text-glow-400">🏙 </span>{{ hit.title }}
+            <span
+              class="inline-flex items-center gap-1"
+              :class="hit.type === 'city' ? 'text-glow-400' : ''"
+            >
+              <AppIcon :name="hit.type === 'city' ? 'building' : 'star'" :size="12" />
+            </span>
+            {{ hit.title }}
           </span>
           <span class="block text-[10px] text-slate-500">{{ hit.subtitle }}</span>
         </button>

@@ -2,6 +2,7 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { THEMES, type ThemeId } from '../themes'
 import { useThemeStore } from '../stores/theme'
+import AppIcon from './AppIcon.vue'
 
 const themeStore = useThemeStore()
 const open = ref(false)
@@ -23,12 +24,12 @@ onBeforeUnmount(() => document.removeEventListener('click', onOutside))
 <template>
   <div ref="root" class="relative">
     <button
-      class="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-sm transition
-             bg-white/5 border border-white/10 hover:border-glow-500/50"
+      class="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition
+             bg-white/5 border border-white/10 hover:border-glow-500/50 text-glow-400"
       title="切换主题"
       @click="open = !open"
     >
-      {{ THEMES.find((t) => t.id === themeStore.theme)?.emoji }}
+      <AppIcon :name="THEMES.find((t) => t.id === themeStore.theme)!.icon" :size="16" />
     </button>
 
     <Transition
@@ -59,14 +60,19 @@ onBeforeUnmount(() => document.removeEventListener('click', onOutside))
             />
           </span>
           <span class="min-w-0 flex-1">
-            <span class="block text-[13px] font-medium" :class="t.id === themeStore.theme ? 'text-glow-300' : 'text-slate-200'">
-              {{ t.emoji }} {{ t.name }}
+            <span
+              class="flex items-center gap-1.5 text-[13px] font-medium"
+              :class="t.id === themeStore.theme ? 'text-glow-300' : 'text-slate-200'"
+            >
+              <AppIcon :name="t.icon" :size="14" />
+              {{ t.name }}
             </span>
             <span class="block text-[10px] text-slate-500">{{ t.desc }}</span>
           </span>
-          <span v-if="t.id === themeStore.theme" class="text-glow-400 text-xs shrink-0">✓</span>
+          <span v-if="t.id === themeStore.theme" class="text-glow-400 shrink-0"><AppIcon name="check" :size="14" /></span>
         </button>
       </div>
     </Transition>
   </div>
 </template>
+

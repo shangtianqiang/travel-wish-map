@@ -3,6 +3,8 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useStats } from '../composables/stats'
 import { useRecordsStore } from '../stores/records'
 import { attractionById, attractionsByCity, cities, cityById } from '../data'
+import AppIcon from './AppIcon.vue'
+import type { IconName } from './icons'
 import type { TravelRecord } from '../types'
 
 const emit = defineEmits<{ close: [] }>()
@@ -33,10 +35,16 @@ const totalAttractions = computed(() => {
 })
 
 const headline = computed(() => [
-  { icon: '🌟', label: '点亮景点', value: litAttractions.value.size, sub: `共 ${totalAttractions.value} 个` },
-  { icon: '🏙️', label: '点亮城市', value: litCityIds.value.size, sub: `共 ${attractionsByCity.size} 城` },
-  { icon: '🗺️', label: '走过省份', value: litProvinces.value.size, sub: '全国 31 省区市' },
+  { icon: 'star' as IconName, label: '点亮景点', value: litAttractions.value.size, sub: `共 ${totalAttractions.value} 个` },
+  { icon: 'building' as IconName, label: '点亮城市', value: litCityIds.value.size, sub: `共 ${attractionsByCity.size} 城` },
+  { icon: 'globe' as IconName, label: '走过省份', value: litProvinces.value.size, sub: '全国 31 省区市' },
 ])
+
+const TABS = [
+  { key: 'stats', label: '看板', icon: 'chart' as IconName },
+  { key: 'wishes', label: '心愿', icon: 'flag' as IconName },
+  { key: 'diary', label: '日记', icon: 'book' as IconName },
+]
 
 /* ---------- 心愿 ---------- */
 const wishes = computed(() => {
@@ -122,23 +130,21 @@ function cityOf(id: string) {
   <div class="absolute inset-0 z-[1150] bg-night-900 overflow-hidden flex flex-col">
     <div class="shrink-0 flex items-center gap-3 px-4 py-3 border-b border-white/8">
       <button
-        class="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-xs text-slate-300 hover:text-glow-300 transition"
+        class="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-xs text-slate-300 hover:text-glow-300 transition inline-flex items-center gap-1"
         @click="emit('close')"
       >
-        ← 返回地图
+        <AppIcon name="arrowLeft" :size="13" />
+        返回地图
       </button>
       <div class="flex gap-1">
         <button
-          v-for="t in [
-            { key: 'stats', label: '📊 看板' },
-            { key: 'wishes', label: '⚑ 心愿' },
-            { key: 'diary', label: '📖 日记' },
-          ]"
+          v-for="t in TABS"
           :key="t.key"
-          class="px-3.5 py-1.5 rounded-lg text-xs font-medium transition"
+          class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-medium transition"
           :class="tab === t.key ? 'bg-glow-500/15 text-glow-300 border border-glow-500/40' : 'text-slate-400 hover:text-slate-200'"
           @click="tab = t.key as typeof tab"
         >
+          <AppIcon :name="t.icon" :size="13" />
           {{ t.label }}
         </button>
       </div>
@@ -153,7 +159,7 @@ function cityOf(id: string) {
             :key="h.label"
             class="rounded-2xl p-4 bg-gradient-to-b from-night-700/80 to-night-800 border border-glow-500/15 text-center"
           >
-            <div class="text-xl">{{ h.icon }}</div>
+            <AppIcon :name="h.icon" :size="24" class="text-glow-400 mx-auto" />
             <div class="text-2xl sm:text-3xl font-black text-glow-300 tabular-nums mt-1">{{ h.value }}</div>
             <div class="text-xs text-slate-300 mt-0.5">{{ h.label }}</div>
             <div class="text-[10px] text-slate-500">{{ h.sub }}</div>
@@ -183,7 +189,7 @@ function cityOf(id: string) {
       <!-- ============ 心愿清单 ============ -->
       <div v-else-if="tab === 'wishes'" class="max-w-2xl mx-auto">
         <div v-if="!wishes.length" class="text-center py-16 text-slate-500 text-sm">
-          <div class="text-3xl mb-2">⚑</div>
+          <AppIcon name="flag" :size="30" class="mx-auto mb-2 text-wish-400/70" />
           还没有心愿。在地图上点击任意景点，点「我想去」加入心愿清单。
         </div>
         <div v-else class="space-y-2.5">
@@ -192,7 +198,7 @@ function cityOf(id: string) {
             :key="w.record.id"
             class="flex items-center gap-3 px-4 py-3 rounded-xl bg-night-800 border border-wish-400/20"
           >
-            <span class="text-lg">⚑</span>
+            <AppIcon name="flag" :size="17" class="text-wish-400 shrink-0" />
             <div class="min-w-0 flex-1">
               <div class="text-sm font-medium text-slate-200 truncate">{{ nameOf(w.attractionId) }}</div>
               <div class="text-[11px] text-slate-500 truncate">
@@ -200,17 +206,18 @@ function cityOf(id: string) {
               </div>
             </div>
             <button
-              class="shrink-0 px-2.5 py-1 rounded-lg bg-glow-500/15 text-glow-300 text-[11px] border border-glow-500/30 hover:bg-glow-500/25 transition"
+              class="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-glow-500/15 text-glow-300 text-[11px] border border-glow-500/30 hover:bg-glow-500/25 transition"
               @click="fulfillWish(w.attractionId)"
             >
-              ✓ 已打卡
+              <AppIcon name="check" :size="12" />
+              已打卡
             </button>
             <button
-              class="shrink-0 text-slate-500 hover:text-red-400 text-xs transition"
+              class="shrink-0 text-slate-500 hover:text-red-400 transition"
               title="移除心愿"
               @click="records.removeRecord(w.record.id)"
             >
-              ✕
+              <AppIcon name="x" :size="13" />
             </button>
           </div>
         </div>
@@ -219,7 +226,7 @@ function cityOf(id: string) {
       <!-- ============ 打卡日记 ============ -->
       <div v-else class="max-w-2xl mx-auto">
         <div v-if="!visits.length" class="text-center py-16 text-slate-500 text-sm">
-          <div class="text-3xl mb-2">🌟</div>
+          <AppIcon name="star" :size="30" class="mx-auto mb-2 text-glow-400/70" />
           还没有打卡记录。去地图点亮第一个地方吧！
         </div>
         <div v-else class="relative pl-6">
@@ -231,9 +238,15 @@ function cityOf(id: string) {
                 <span class="text-xs font-mono text-glow-400 tabular-nums">{{ v.date }}</span>
                 <span class="text-sm font-bold text-slate-200 truncate">{{ nameOf(v.attractionId) }}</span>
                 <span class="text-[10px] text-slate-500 shrink-0">{{ cityOf(v.attractionId)?.name }}</span>
-                <div class="ml-auto flex gap-1.5 shrink-0">
+                <div class="ml-auto flex gap-1.5 shrink-0 items-center">
                   <button class="text-[11px] text-slate-500 hover:text-glow-300 transition" @click="startEdit(v)">编辑</button>
-                  <button class="text-[11px] text-slate-500 hover:text-red-400 transition" @click="records.removeRecord(v.id)">删除</button>
+                  <button
+                    class="text-slate-500 hover:text-red-400 transition"
+                    title="删除"
+                    @click="records.removeRecord(v.id)"
+                  >
+                    <AppIcon name="trash" :size="13" />
+                  </button>
                 </div>
               </div>
 

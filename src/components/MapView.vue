@@ -18,6 +18,8 @@ import AttractionCard from './AttractionCard.vue'
 import CityDrawer from './CityDrawer.vue'
 import PosterModal from './PosterModal.vue'
 import SearchBox from './SearchBox.vue'
+import AppIcon from './AppIcon.vue'
+import { ICON_PATHS } from './icons'
 
 const records = useRecordsStore()
 const { litCityIds, litProvinces, litAttractions } = useStats()
@@ -40,6 +42,9 @@ const overlayMarkers = new Map<string, L.Marker>()
 const cityLabels = new Map<string, L.Marker>()
 
 const provinceNameOfAdcode = new Map(provinces.map((p) => [p.adcode, p.name]))
+
+/** 心愿旗帜（Leaflet divIcon 为原生 HTML，需内联 SVG，样式由 .wish-flag 控制） */
+const WISH_FLAG_SVG = `<svg class="wish-flag" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON_PATHS.flag}</svg>`
 
 function focusAttraction(aId: string) {
   const a = attractionById.get(aId)
@@ -177,7 +182,7 @@ function syncOverlays() {
     const a = attractionById.get(aId)
     if (!a) continue
     const m = L.marker([a.lat, a.lng], {
-      icon: L.divIcon({ className: 'wish-wrap', html: '<span class="wish-flag">⚑</span>', iconSize: [14, 16], iconAnchor: [7, 16] }),
+      icon: L.divIcon({ className: 'wish-wrap', html: WISH_FLAG_SVG, iconSize: [16, 16], iconAnchor: [8, 16] }),
       interactive: false,
       zIndexOffset: 600,
     }).addTo(map!)
@@ -323,17 +328,18 @@ watch(
              bg-night-800/85 backdrop-blur border border-white/10 text-[11px] text-slate-300 pointer-events-none"
     >
       <span class="flex items-center gap-2"><i class="dot dot-none" />未点亮</span>
-      <span class="flex items-center gap-2"><i class="dot dot-wish" />⚑ 心愿</span>
+      <span class="flex items-center gap-2"><i class="dot dot-wish" /><AppIcon name="flag" :size="10" class="text-wish-400" />心愿</span>
       <span class="flex items-center gap-2"><i class="dot dot-lit" />已点亮</span>
     </div>
 
     <!-- 海报按钮 -->
     <button
-      class="absolute right-3 bottom-3 z-[1000] px-3.5 py-2 rounded-xl text-xs font-medium transition
+      class="absolute right-3 bottom-3 z-[1000] px-3.5 py-2 rounded-xl text-xs font-medium transition inline-flex items-center gap-1.5
              bg-glow-500/15 text-glow-300 border border-glow-500/40 backdrop-blur hover:bg-glow-500/30"
       @click="showPoster = true"
     >
-      🖼️ 生成点亮海报
+      <AppIcon name="image" :size="14" />
+      生成点亮海报
     </button>
 
     <CityDrawer :city-id="drawerCityId" @close="drawerCityId = null" @focus="focusAttraction" />

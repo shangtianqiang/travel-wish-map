@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { attractionById, cityById } from '../data'
 import { useRecordsStore } from '../stores/records'
+import AppIcon from './AppIcon.vue'
 
 const props = defineProps<{
   attractionId: string
@@ -70,9 +71,9 @@ async function removeVisit(recordId: string) {
   <div v-if="attraction" class="attraction-card p-3.5 pt-8">
     <div class="flex items-start justify-between gap-2">
       <div class="min-w-0">
-        <h3 class="font-bold text-[15px] text-glow-300 leading-snug">
-          <span v-if="status === 'lit'">🌟</span>
-          <span v-else-if="status === 'wish'">⚑</span>
+        <h3 class="flex items-center gap-1.5 font-bold text-[15px] text-glow-300 leading-snug">
+          <AppIcon v-if="status === 'lit'" name="star" :size="16" class="text-glow-400" />
+          <AppIcon v-else-if="status === 'wish'" name="flag" :size="15" class="text-wish-400" />
           {{ attraction.name }}
         </h3>
         <p class="text-[11px] text-slate-400 mt-0.5">
@@ -81,9 +82,10 @@ async function removeVisit(recordId: string) {
       </div>
       <button
         v-if="onFlyTo"
-        class="shrink-0 text-[11px] px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-slate-300 hover:text-glow-300 hover:border-glow-500/40 transition"
+        class="shrink-0 flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-slate-300 hover:text-glow-300 hover:border-glow-500/40 transition"
         @click="onFlyTo()"
       >
+        <AppIcon name="locate" :size="12" />
         定位
       </button>
     </div>
@@ -98,13 +100,13 @@ async function removeVisit(recordId: string) {
         class="flex items-start gap-2 text-[11px] px-2.5 py-1.5 rounded-lg bg-glow-500/8 border border-glow-500/20"
       >
         <span class="text-glow-400 font-mono tabular-nums shrink-0">{{ v.date }}</span>
-        <span class="text-slate-300 min-w-0 break-words">{{ v.note || '已点亮 ✨' }}</span>
+        <span class="text-slate-300 min-w-0 break-words">{{ v.note || '已点亮' }}</span>
         <button
           class="ml-auto shrink-0 text-slate-500 hover:text-red-400 transition"
           title="删除打卡"
           @click="removeVisit(v.id)"
         >
-          ✕
+          <AppIcon name="x" :size="12" />
         </button>
       </div>
     </div>
@@ -132,19 +134,23 @@ async function removeVisit(recordId: string) {
           class="relative text-[10px] px-2 py-1 rounded-md bg-white/5 border border-white/10 text-slate-300"
         >
           照片{{ i + 1 }}
-          <button class="ml-1 text-slate-500 hover:text-red-400" @click="removePhoto(i)">✕</button>
+          <button class="ml-1 text-slate-500 hover:text-red-400 align-middle" @click="removePhoto(i)">
+            <AppIcon name="x" :size="10" />
+          </button>
         </span>
       </div>
       <label class="inline-flex items-center gap-1.5 text-[11px] text-slate-400 hover:text-glow-300 transition cursor-pointer">
-        📷 添加照片
+        <AppIcon name="camera" :size="13" />
+        添加照片
         <input type="file" accept="image/*" multiple class="hidden" @change="onPhotosPicked" />
       </label>
       <div class="flex gap-2">
         <button
-          class="flex-1 py-1.5 rounded-lg bg-glow-500 text-[var(--c-on-accent)] text-xs font-bold hover:bg-glow-400 transition"
+          class="flex-1 inline-flex items-center justify-center gap-1 py-1.5 rounded-lg bg-glow-500 text-[var(--c-on-accent)] text-xs font-bold hover:bg-glow-400 transition"
           @click="submitCheckIn"
         >
-          ✨ 确认点亮
+          <AppIcon name="sparkles" :size="13" />
+          确认点亮
         </button>
         <button
           class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-slate-400 hover:text-slate-200 transition"
@@ -159,7 +165,7 @@ async function removeVisit(recordId: string) {
     <div v-else class="flex gap-2 mt-3">
       <button
         v-if="status !== 'lit'"
-        class="flex-1 py-1.5 rounded-lg text-xs font-medium transition border"
+        class="flex-1 inline-flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-medium transition border"
         :class="
           status === 'wish'
             ? 'bg-wish-400/15 text-wish-400 border-wish-400/40 hover:bg-wish-400/25'
@@ -167,13 +173,15 @@ async function removeVisit(recordId: string) {
         "
         @click="toggleWish"
       >
-        {{ status === 'wish' ? '取消心愿' : '⭐ 我想去' }}
+        <AppIcon name="flag" :size="12" />
+        {{ status === 'wish' ? '取消心愿' : '我想去' }}
       </button>
       <button
-        class="flex-1 py-1.5 rounded-lg bg-glow-500/90 text-[var(--c-on-accent)] text-xs font-bold hover:bg-glow-400 transition"
+        class="flex-1 inline-flex items-center justify-center gap-1 py-1.5 rounded-lg bg-glow-500/90 text-[var(--c-on-accent)] text-xs font-bold hover:bg-glow-400 transition"
         @click="showForm = true"
       >
-        {{ status === 'lit' ? '再打卡一次' : '🌟 打卡点亮' }}
+        <AppIcon :name="status === 'lit' ? 'star' : 'sparkles'" :size="13" />
+        {{ status === 'lit' ? '再打卡一次' : '打卡点亮' }}
       </button>
     </div>
   </div>

@@ -1,9 +1,11 @@
 export type ThemeId = 'night' | 'ink' | 'aurora'
 
+import type { IconName } from './components/icons'
+
 export interface ThemeMeta {
   id: ThemeId
   name: string
-  emoji: string
+  icon: IconName
   desc: string
   /** 切换面板里的三个预览色点 */
   swatch: [string, string, string]
@@ -44,21 +46,21 @@ export const THEMES: ThemeMeta[] = [
   {
     id: 'night',
     name: '夜光金',
-    emoji: '🌙',
+    icon: 'moon',
     desc: '深蓝夜幕 · 金色足迹',
     swatch: ['#0b1220', '#f6c453', '#ffe9a3'],
   },
   {
     id: 'ink',
     name: '水墨江南',
-    emoji: '📜',
+    icon: 'scroll',
     desc: '宣纸米白 · 朱砂点亮',
     swatch: ['#f4eddc', '#c04f38', '#6b6355'],
   },
   {
     id: 'aurora',
     name: '极光翠',
-    emoji: '🌌',
+    icon: 'sparkle',
     desc: '墨绿深空 · 薄荷翠光',
     swatch: ['#081a17', '#3ddbb5', '#a8f0dc'],
   },

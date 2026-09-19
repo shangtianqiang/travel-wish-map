@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue'
 import { renderPoster } from '../utils/poster'
 import { useThemeStore } from '../stores/theme'
+import AppIcon from './AppIcon.vue'
 
 const props = defineProps<{
   open: boolean
@@ -54,10 +55,11 @@ function download() {
         />
         <div class="flex gap-2">
           <button
-            class="px-5 py-2 rounded-xl bg-glow-500 text-[var(--c-on-accent)] text-sm font-bold hover:bg-glow-400 transition"
+            class="px-5 py-2 rounded-xl bg-glow-500 text-[var(--c-on-accent)] text-sm font-bold hover:bg-glow-400 transition inline-flex items-center gap-1.5"
             @click="download"
           >
-            ⬇️ 保存海报
+            <AppIcon name="download" :size="15" />
+            保存海报
           </button>
           <button
             class="px-5 py-2 rounded-xl bg-white/8 border border-white/15 text-sm text-slate-300 hover:text-slate-100 transition"

@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { attractionsByCity, cityById } from '../data'
 import { useRecordsStore } from '../stores/records'
 import { useStats } from '../composables/stats'
+import AppIcon from './AppIcon.vue'
 
 const props = defineProps<{ cityId: string | null }>()
 defineEmits<{ close: []; focus: [attractionId: string] }>()
@@ -27,7 +28,9 @@ const litCount = computed(
       <div class="px-4 pt-4 pb-3 border-b border-white/10">
         <div class="flex items-center justify-between">
           <h2 class="text-base font-bold text-glow-300">{{ city.name }}</h2>
-          <button class="text-slate-500 hover:text-slate-200 text-sm" @click="$emit('close')">✕</button>
+          <button class="text-slate-500 hover:text-slate-200 transition" @click="$emit('close')">
+            <AppIcon name="x" :size="15" />
+          </button>
         </div>
         <p class="text-[11px] text-slate-400 mt-0.5">{{ city.province }} · {{ list.length }} 个精选景点</p>
         <div class="mt-2.5 h-1.5 rounded-full bg-white/8 overflow-hidden">
@@ -48,8 +51,20 @@ const litCount = computed(
           class="w-full flex items-center gap-2.5 px-4 py-2.5 text-left hover:bg-white/5 transition"
           @click="$emit('focus', a.id)"
         >
-          <span class="shrink-0 text-sm">
-            {{ litAttractions.has(a.id) ? '🌟' : records.statusOf(a.id) === 'wish' ? '⚑' : '·' }}
+          <span class="shrink-0 w-4 flex justify-center">
+            <AppIcon
+              v-if="litAttractions.has(a.id)"
+              name="star"
+              :size="15"
+              class="text-glow-400"
+            />
+            <AppIcon
+              v-else-if="records.statusOf(a.id) === 'wish'"
+              name="flag"
+              :size="14"
+              class="text-wish-400"
+            />
+            <i v-else class="w-1.5 h-1.5 rounded-full bg-slate-500/60" />
           </span>
           <span class="min-w-0 flex-1">
             <span
