@@ -1,7 +1,8 @@
-import type { Attraction, City } from '../types'
+import type { Attraction, AttractionPhoto, City } from '../types'
 import citiesJson from './cities.json'
 import provincesGeo from './geo/china-provinces.json'
 import cityBoundariesGeo from './geo/city-boundaries.json'
+import photosJson from './attraction-photos.json'
 
 export const cities = (citiesJson as { cities: City[] }).cities
 
@@ -39,3 +40,10 @@ for (const a of attractions) {
 }
 
 export const attractionById = new Map(attractions.map((a) => [a.id, a]))
+
+/** attractionId -> Wikimedia Commons 真实照片（1-3 张），无照片的景点不在此映射中 */
+export const attractionPhotos = new Map<string, AttractionPhoto[]>(
+  Object.entries(photosJson as Record<string, AttractionPhoto[]>).filter(
+    ([, photos]) => photos && photos.length > 0
+  )
+)

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { attractionById, cityById } from '../data'
+import { attractionById, attractionPhotos, cityById } from '../data'
 import { useRecordsStore } from '../stores/records'
 import AppIcon from './AppIcon.vue'
 
@@ -16,6 +16,16 @@ const city = computed(() => {
   const a = attraction.value
   return a ? cityById.get(a.cityId) : undefined
 })
+
+// Wikimedia Commons 真实照片，加载失败的逐张隐藏
+const photos = computed(() => attractionPhotos.get(props.attractionId) ?? [])
+const hiddenPhotos = ref(new Set<number>())
+const visiblePhotos = computed(() =>
+  photos.value.filter((_, i) => !hiddenPhotos.value.has(i))
+)
+function onPhotoError(i: number) {
+  hiddenPhotos.value.add(i)
+}
 
 const status = computed(() => records.statusOf(props.attractionId))
 const visits = computed(() =>
@@ -91,6 +101,43 @@ async function removeVisit(recordId: string) {
     </div>
 
     <p class="text-xs text-slate-300/90 leading-relaxed mt-2">{{ attraction.intro }}</p>
+
+    <!-- Wikimedia Commons 真实照片：1-3 张并排 -->
+    <div v-if="visiblePhotos.length" class="mt-2.5">
+      <div
+        class="grid gap-1.5"
+        :class="
+          visiblePhotos.length === 1
+            ? 'grid-cols-1'
+            : visiblePhotos.length === 2
+              ? 'grid-cols-2'
+              : 'grid-cols-3'
+        "
+      >
+        <a
+          v-for="(p, i) in visiblePhotos"
+          :key="p.title"
+          :href="p.page"
+          target="_blank"
+          rel="noopener"
+          class="block overflow-hidden rounded-lg border border-white/10 bg-night-700"
+          :title="`查看原图（Wikimedia Commons）`"
+        >
+          <img
+            :src="p.url"
+            :alt="`${attraction.name}照片 ${i + 1}`"
+            loading="lazy"
+            referrerpolicy="no-referrer"
+            class="w-full object-cover hover:scale-105 transition duration-300"
+            :class="visiblePhotos.length === 1 ? 'h-40' : 'h-[108px]'"
+            @error="onPhotoError(i)"
+          />
+        </a>
+      </div>
+      <p class="text-[10px] text-slate-500 mt-1 text-right">
+        照片来自 Wikimedia Commons
+      </p>
+    </div>
 
     <!-- 已有打卡记录 -->
     <div v-if="visits.length" class="mt-3 space-y-1.5">

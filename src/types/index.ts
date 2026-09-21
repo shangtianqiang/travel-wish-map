@@ -17,6 +17,16 @@ export interface Attraction {
   intro: string
 }
 
+/** 来自 Wikimedia Commons 的景点真实照片 */
+export interface AttractionPhoto {
+  /** 800px 缩略图地址 */
+  url: string
+  /** Commons 文件页（查看原图与作者署名） */
+  page: string
+  /** File: 文件名 */
+  title: string
+}
+
 export type AttractionCategory =
   | '历史古迹'
   | '自然风光'
