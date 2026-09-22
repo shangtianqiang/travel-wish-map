@@ -1,5 +1,10 @@
 #!/usr/bin/env node
 /**
+ * ⚠️ 数据已冻结（2026-09-22）：src/data/attraction-photos.json 为最终版本
+ * （633/687 景点有图；剩余 54 个为 Commons 无图的小众 POI，宁缺毋错）。
+ * package.json 已移除 photos:fetch 入口，main() 也加了 ALLOW_PHOTO_FETCH=1
+ * 显式开关，日常开发不要再运行本脚本（全量抓取很慢）。脚本仅留存供复现/审计。
+ *
  * 从 Wikimedia Commons / 中文维基百科为每个景点匹配 1-3 张真实照片（非 AI 图）：
  *   src/data/attraction-photos.json
  *
@@ -786,6 +791,13 @@ async function runPool(items, worker, workers) {
 }
 
 async function main() {
+  if (process.env.ALLOW_PHOTO_FETCH !== '1') {
+    console.error(
+      '照片数据已冻结（src/data/attraction-photos.json 为最终版本），默认禁止抓取。\n' +
+        '如确需重跑（全量很慢且会改动数据），请显式设置环境变量 ALLOW_PHOTO_FETCH=1。'
+    )
+    process.exit(1)
+  }
   const { cities } = JSON.parse(await readFile(path.join(DATA, 'cities.json'), 'utf8'))
   const cityById = new Map(cities.map((c) => [c.id, c]))
   const regionFiles = ['north', 'south', 'east', 'west']
