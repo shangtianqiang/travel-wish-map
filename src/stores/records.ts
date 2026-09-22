@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { toRaw } from 'vue'
 import type { AttractionStatus, RecordType, TravelRecord } from '../types'
 import { db } from './db'
 
@@ -90,13 +91,18 @@ export const useRecordsStore = defineStore('records', {
     },
 
     async checkIn(input: { attractionId: string; date?: string; note?: string; photos?: Blob[] }) {
+      // IndexedDB 的结构化克隆无法克隆 Vue 的响应式 Proxy（包括 Proxy 数组），
+      // 入库前必须还原成原生数组与原始 Blob/File，否则会抛 DataCloneError。
+      const photos = input.photos?.length
+        ? input.photos.map((p) => toRaw(p))
+        : undefined
       await db.records.add({
         id: newId(),
         attractionId: input.attractionId,
         type: 'visit',
         date: input.date || new Date().toISOString().slice(0, 10),
         note: input.note?.trim() || undefined,
-        photos: input.photos,
+        photos,
         createdAt: Date.now(),
       })
       // 打卡后自动移除同景点心愿（心愿达成）

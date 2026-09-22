@@ -37,7 +37,7 @@ const visits = computed(() =>
 const showForm = ref(false)
 const formDate = ref(new Date().toISOString().slice(0, 10))
 const formNote = ref('')
-const formPhotos = ref<Blob[]>([])
+const formPhotos = ref<File[]>([])
 
 function today() {
   formDate.value = new Date().toISOString().slice(0, 10)
@@ -176,8 +176,8 @@ async function removeVisit(recordId: string) {
       />
       <div v-if="formPhotos.length" class="flex flex-wrap gap-1.5">
         <span
-          v-for="i in formPhotos.length"
-          :key="i"
+          v-for="(file, i) in formPhotos"
+          :key="`${file.name}-${file.size}-${i}`"
           class="relative text-[10px] px-2 py-1 rounded-md bg-white/5 border border-white/10 text-slate-300"
         >
           照片{{ i + 1 }}

@@ -282,7 +282,7 @@ function cityOf(id: string) {
 
               <div v-if="v.photos?.length" class="flex gap-1.5 mt-2">
                 <img
-                  v-for="i in v.photos.length"
+                  v-for="(_blob, i) in v.photos"
                   :key="i"
                   :src="photoUrl(v, i)"
                   class="w-16 h-16 object-cover rounded-lg border border-white/10"

@@ -228,10 +228,20 @@ function openAttractionPopup(aId: string) {
     autoPan: true,
     offset: L.point(0, -6),
     maxWidth: 280,
-  }).on('remove', () => {
-    popupApp?.unmount()
-    popupApp = null
   })
+    .on('add', () => {
+      // Leaflet 1.9 只在弹窗容器上拦截 mousedown，click 靠 e.target 祖先链上的
+      // _leaflet_disable_click 标记屏蔽。Vue 在可信点击的监听器间隙会刷新微任务、
+      // 同步替换弹窗内容（如展开打卡表单），此时 e.target 已脱离文档，祖先链判定
+      // 失效，地图会收到 preclick 把弹窗误关。容器本身不会被替换，在容器上显式
+      // 阻止 click/mouseup 冒泡即可与内容重渲染无关地屏蔽地图点击。
+      const el = popup?.getElement()
+      if (el) L.DomEvent.on(el, 'click mouseup', L.DomEvent.stopPropagation)
+    })
+    .on('remove', () => {
+      popupApp?.unmount()
+      popupApp = null
+    })
 
   popup.setContent(host).setLatLng([a.lat, a.lng]).openOn(map)
 }
