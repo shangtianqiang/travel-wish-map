@@ -29,12 +29,18 @@ const themeStore = useThemeStore()
 const mapEl = ref<HTMLElement | null>(null)
 const drawerCityId = ref<string | null>(null)
 const showPoster = ref(false)
+/** 景点弹窗打开时隐藏搜索框：Leaflet 弹窗位于 map-pane（transform 形成的层叠上下文）
+ *  内，z-index 无法超过地图容器外的搜索框，窄屏下会遮挡弹窗标题 */
+const popupOpen = ref(false)
 
 let map: L.Map | null = null
 let canvasRenderer: L.Canvas | null = null
 let popup: L.Popup | null = null
 let popupApp: VueApp | null = null
 let resizeObserver: ResizeObserver | null = null
+/** 监听弹窗自身尺寸变化（展开打卡表单等），重新做 autoPan，避免窄屏下内容溢出 */
+let popupResizeObserver: ResizeObserver | null = null
+let popupAdjustTimer: ReturnType<typeof setTimeout> | null = null
 
 const provincePaths = new Map<number, L.Path>()
 const cityPaths = new Map<string, L.Polygon>()
@@ -51,11 +57,29 @@ const provinceNameOfAdcode = new Map(provinces.map((p) => [p.adcode, p.name]))
 /** 心愿旗帜（Leaflet divIcon 为原生 HTML，需内联 SVG，样式由 .wish-flag 控制） */
 const WISH_FLAG_SVG = `<svg class="wish-flag" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON_PATHS.flag}</svg>`
 
-function focusAttraction(aId: string) {
+/** 连续切换景点时只保留最后一次的弹窗请求，避免动画回调打开旧弹窗 */
+let openSeq = 0
+/**
+ * 打开景点弹窗（搜索 / 城市抽屉 / 地图点标记的统一入口）。
+ * 先飞到 zoom>=8 再挂载弹窗：低缩放级别下全国视野被 maxBounds 锁死，地图无法
+ * 平移避让，较高的弹窗（尤其展开打卡表单后）会被顶到 header 下且无法拉回。
+ * 飞行同时收起城市抽屉，避免窄屏下抽屉遮挡弹窗。
+ */
+function openAttractionPopup(aId: string) {
   const a = attractionById.get(aId)
   if (!a || !map) return
+  drawerCityId.value = null
+  const seq = ++openSeq
+  let done = false
+  const mount = () => {
+    if (seq !== openSeq || done) return
+    done = true
+    mountAttractionPopup(aId)
+  }
+  map.once('moveend', mount)
   map.flyTo([a.lat, a.lng], Math.max(map.getZoom(), 8), { duration: 0.8 })
-  openAttractionPopup(aId)
+  // 兜底：视野无变化导致 moveend 不触发时，仍保证弹窗打开
+  setTimeout(mount, 1200)
 }
 
 /** 城市名标注显隐：放大后显示，点亮的城市由进度角标代替 */
@@ -208,7 +232,31 @@ function syncOverlays() {
   syncCityNameVisibility()
 }
 
-function openAttractionPopup(aId: string) {
+/**
+ * 即时把弹窗拉回可视区（为顶部 header/搜索框、底部图例/海报按钮留边距）。
+ * 不用 Leaflet 自带的 _adjustPan：它走动画 panBy，弹窗尺寸连续变化时后一次
+ * 调用会 stop 掉进行中的动画并回弹，窄屏下展开打卡表单后弹窗反而被顶回 header 下。
+ * animate:false 的即时平移幂等，已在可视区内时重复调用为空操作。
+ */
+function adjustPopupInView() {
+  if (!map || !popup) return
+  const el = popup.getElement()
+  if (!el) return
+  const mapRect = map.getContainer().getBoundingClientRect()
+  const r = el.getBoundingClientRect()
+  const padTop = 16
+  const padBottom = 64
+  const padX = 12
+  let moveX = 0
+  let moveY = 0
+  if (r.top < mapRect.top + padTop) moveY = mapRect.top + padTop - r.top
+  else if (r.bottom > mapRect.bottom - padBottom) moveY = mapRect.bottom - padBottom - r.bottom
+  if (r.left < mapRect.left + padX) moveX = mapRect.left + padX - r.left
+  else if (r.right > mapRect.right - padX) moveX = mapRect.right - padX - r.right
+  if (moveX || moveY) map.panBy([-moveX, -moveY], { animate: false })
+}
+
+function mountAttractionPopup(aId: string) {
   const a = attractionById.get(aId)
   if (!a || !map) return
   popupApp?.unmount()
@@ -217,6 +265,8 @@ function openAttractionPopup(aId: string) {
     attractionId: aId,
     onFlyTo: () => {
       map!.flyTo([a.lat, a.lng], Math.max(map!.getZoom(), 8), { duration: 0.8 })
+      // 飞行结束后重新把弹窗拉回可视区，避免弹窗被顶到 header 下
+      map!.once('moveend', () => adjustPopupInView())
     },
   })
   popupApp.use(pinia)
@@ -226,6 +276,9 @@ function openAttractionPopup(aId: string) {
     className: 'attraction-popup',
     closeButton: true,
     autoPan: true,
+    // 为顶部搜索框、底部图例/海报按钮预留空间，避免弹窗贴边或被遮挡
+    autoPanPaddingTopLeft: L.point(12, 16),
+    autoPanPaddingBottomRight: L.point(12, 64),
     offset: L.point(0, -6),
     maxWidth: 280,
   })
@@ -236,11 +289,27 @@ function openAttractionPopup(aId: string) {
       // 失效，地图会收到 preclick 把弹窗误关。容器本身不会被替换，在容器上显式
       // 阻止 click/mouseup 冒泡即可与内容重渲染无关地屏蔽地图点击。
       const el = popup?.getElement()
-      if (el) L.DomEvent.on(el, 'click mouseup', L.DomEvent.stopPropagation)
+      if (el) {
+        L.DomEvent.on(el, 'click mouseup', L.DomEvent.stopPropagation)
+        popupResizeObserver?.disconnect()
+        popupResizeObserver = new ResizeObserver(() => {
+          // Leaflet 仅在弹窗打开瞬间 autoPan；展开打卡表单导致弹窗变高后需手动补一次。
+          // 下一帧布局已落定；即时平移幂等，连续触发也不会互相打断。
+          if (popupAdjustTimer) clearTimeout(popupAdjustTimer)
+          popupAdjustTimer = setTimeout(adjustPopupInView, 60)
+        })
+        popupResizeObserver.observe(el)
+      }
+      popupOpen.value = true
     })
     .on('remove', () => {
+      popupResizeObserver?.disconnect()
+      popupResizeObserver = null
+      if (popupAdjustTimer) clearTimeout(popupAdjustTimer)
+      popupAdjustTimer = null
       popupApp?.unmount()
       popupApp = null
+      popupOpen.value = false
     })
 
   popup.setContent(host).setLatLng([a.lat, a.lng]).openOn(map)
@@ -265,7 +334,8 @@ onMounted(() => {
     maxBounds: L.latLngBounds([15, 72], [54, 136]),
     maxBoundsViscosity: 0.9,
   })
-  map.setView([35.2, 104.5], window.innerWidth < 640 ? 3.25 : 4.5)
+  // minZoom 为 4，移动端初始缩放不能低于它，否则会被钳制（取 4 与桌面 4.5 接近）
+  map.setView([35.2, 104.5], window.innerWidth < 640 ? 4 : 4.5)
   canvasRenderer = L.canvas({ padding: 0.5 })
 
   L.geoJSON(provinceFeatureCollection(), {
@@ -362,6 +432,8 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   resizeObserver?.disconnect()
+  popupResizeObserver?.disconnect()
+  if (popupAdjustTimer) clearTimeout(popupAdjustTimer)
   popupApp?.unmount()
   map?.remove()
 })
@@ -382,7 +454,7 @@ watch(
   <div class="absolute inset-0">
     <div ref="mapEl" class="h-full w-full" />
 
-    <SearchBox @pick-attraction="focusAttraction" @pick-city="openCity" />
+    <SearchBox v-show="!popupOpen" @pick-attraction="openAttractionPopup" @pick-city="openCity" />
 
     <!-- 图例 -->
     <div
@@ -404,7 +476,7 @@ watch(
       生成点亮海报
     </button>
 
-    <CityDrawer :city-id="drawerCityId" @close="drawerCityId = null" @focus="focusAttraction" />
+    <CityDrawer :city-id="drawerCityId" @close="drawerCityId = null" @focus="openAttractionPopup" />
     <PosterModal
       :open="showPoster"
       :lit-city-ids="litCityIds"

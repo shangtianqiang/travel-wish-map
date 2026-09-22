@@ -138,6 +138,12 @@ html, body, #app {
 }
 .leaflet-container ::selection { background: var(--c-accent-soft-bg); }
 
+/* 景点弹窗层级：高于搜索框(1050)与地图角标(1000)，低于城市抽屉(1100)与海报(1300)，
+   避免窄屏下弹窗标题被搜索框遮挡 */
+.leaflet-container .leaflet-popup-pane {
+  z-index: 1060;
+}
+
 /* 自定义弹窗外壳 */
 .attraction-card {
   background: var(--c-card-solid);
